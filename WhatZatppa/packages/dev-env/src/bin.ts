@@ -2,6 +2,7 @@ import './env'
 import { generateMockSetup } from './mock'
 import { TestNetwork } from './network'
 import { mockMailer } from './util'
+import { paraDemoSeed } from './seed'
 
 const run = async () => {
   console.log(`
@@ -56,6 +57,9 @@ const run = async () => {
   }
 
   await generateMockSetup(network)
+
+  const sc = network.getSeedClient()
+  await paraDemoSeed(sc)
 
   console.log('✅ Dev environment is ready')
 }

@@ -22,6 +22,15 @@ make build          # genera dist/
 make run-dev-env    # levanta PDS + AppView + Ozone local
 ```
 
+> **Datos de prueba automáticos**: `make run-dev-env` ahora ejecuta un seed PARA que crea:
+> - 5 usuarios (alice, bob, carla, dan, eva)
+> - 3 comunidades
+> - 4 cabildeos con votos y posiciones
+> - 6 posts PARA con highlights
+> - 2 delegaciones de voto
+>
+> Todos con password: `hunter2`
+
 > Si cambias de versión de Node, reconstruye `better-sqlite3`:
 > ```bash
 > nvm use 22
