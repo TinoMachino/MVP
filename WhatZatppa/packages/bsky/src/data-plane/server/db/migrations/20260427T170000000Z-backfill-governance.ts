@@ -6,20 +6,23 @@ export async function up(db: Kysely<any>): Promise<void> {
       uri, cid, "communityUri", state, "matterFlairIds", "policyFlairIds", 
       "moderatorCount", "officialCount", "deputyRoleCount", "lastPublishedAt", "indexedAt"
     )
-    SELECT 
-      uri, 
-      cid, 
-      (json->>'community')::text as "communityUri",
-      (json->'metadata'->>'state')::text as state,
-      (json->'metadata'->'matterFlairIds')::jsonb as "matterFlairIds",
-      (json->'metadata'->'policyFlairIds')::jsonb as "policyFlairIds",
-      COALESCE(jsonb_array_length(json->'moderators'), 0) as "moderatorCount",
-      COALESCE(jsonb_array_length(json->'officials'), 0) as "officialCount",
-      COALESCE(jsonb_array_length(json->'deputies'), 0) as "deputyRoleCount",
-      COALESCE((json->'metadata'->>'lastPublishedAt')::text, (json->>'updatedAt')::text) as "lastPublishedAt",
+    SELECT
+      uri,
+      cid,
+      (record_json->>'community')::text as "communityUri",
+      (record_json->'metadata'->>'state')::text as state,
+      (record_json->'metadata'->'matterFlairIds')::jsonb as "matterFlairIds",
+      (record_json->'metadata'->'policyFlairIds')::jsonb as "policyFlairIds",
+      COALESCE(jsonb_array_length(record_json->'moderators'), 0) as "moderatorCount",
+      COALESCE(jsonb_array_length(record_json->'officials'), 0) as "officialCount",
+      COALESCE(jsonb_array_length(record_json->'deputies'), 0) as "deputyRoleCount",
+      COALESCE((record_json->'metadata'->>'lastPublishedAt')::text, (record_json->>'updatedAt')::text) as "lastPublishedAt",
       "indexedAt"
-    FROM record
-    WHERE collection = 'com.para.community.governance'
+    FROM (
+      SELECT uri, cid, json::jsonb as record_json, "indexedAt"
+      FROM record
+    ) record
+    WHERE uri LIKE '%/com.para.community.governance/%'
     ON CONFLICT (uri) DO UPDATE SET
       cid = EXCLUDED.cid,
       "communityUri" = EXCLUDED."communityUri",

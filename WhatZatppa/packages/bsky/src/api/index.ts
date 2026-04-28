@@ -97,7 +97,6 @@ import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import queryLabels from './com/atproto/label/queryLabels'
 import getRecord from './com/atproto/repo/getRecord'
-import fetchLabels from './com/atproto/temp/fetchLabels'
 import getParaProfileStats from './com/para/actor/getProfileStats'
 import getParaCabildeo from './com/para/civic/getCabildeo'
 import getParaPolicyTally from './com/para/civic/getPolicyTally'
@@ -241,7 +240,6 @@ export default function (server: Server, ctx: AppContext) {
   getAccountInfos(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)
-  fetchLabels(server, ctx)
   queryLabels(server, ctx)
   // com.para
   getParaProfileStats(paraServer, ctx)

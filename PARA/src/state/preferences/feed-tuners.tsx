@@ -1,6 +1,6 @@
 import {useMemo} from 'react'
 
-import {FeedTuner} from '#/lib/api/feed-manip'
+import {FeedTuner, type FeedViewPostsSlice} from '#/lib/api/feed-manip'
 import {type FeedDescriptor} from '../queries/post-feed'
 import {usePreferencesQuery} from '../queries/preferences'
 import {useSession} from '../session'
@@ -61,7 +61,7 @@ export function useFeedTuners(
             : []
 
       if (allFilters.length > 0) {
-        feedTuners.push((tuner, slices) => {
+        feedTuners.push((_tuner, slices): FeedViewPostsSlice[] => {
           const normalizedFilters = new Set(
             allFilters.map(filter => normalizeCommunityFilter(filter)),
           )
@@ -71,11 +71,9 @@ export function useFeedTuners(
               .map(slice => {
                 const filteredItems = slice.items.filter(item => {
                   const postFilters = getPostCommunityFilters(item.post.record)
-                  if (postFilters.length === 0) {
-                    return false
-                  }
-                  return postFilters.some(filter =>
-                    normalizedFilters.has(filter),
+                  return (
+                    postFilters.some(filter => normalizedFilters.has(filter)) ||
+                    postTextMatchesFilter(item.post.record, normalizedFilters)
                   )
                 })
 
@@ -85,12 +83,14 @@ export function useFeedTuners(
                 // We need to preserve the FeedViewPostsSlice class instance structure if possible,
                 // or ensure what we return satisfies the type.
                 // Creating a new object with the same prototype is safer than returning a plain object.
-                const newSlice = Object.create(Object.getPrototypeOf(slice))
+                const newSlice = Object.create(
+                  Object.getPrototypeOf(slice),
+                ) as FeedViewPostsSlice
                 Object.assign(newSlice, slice)
                 newSlice.items = filteredItems
                 return newSlice
               })
-              .filter(slice => slice !== null) as any
+              .filter((slice): slice is FeedViewPostsSlice => slice !== null)
           } catch (e) {
             console.error('Error filtering feed:', e)
             return slices
@@ -119,6 +119,7 @@ function getPostCommunityFilters(record: Record<string, unknown>) {
     pickString(record.category),
     ...pickStringArray(record.communities),
     ...pickStringArray(record.tags),
+    ...extractTextLabels(pickString(record.text)),
   ]
 
   return Array.from(
@@ -128,6 +129,44 @@ function getPostCommunityFilters(record: Record<string, unknown>) {
 
 function normalizeCommunityFilter(value: string) {
   return value.trim().replace(/^p\//i, '').toLowerCase()
+}
+
+function postTextMatchesFilter(
+  record: Record<string, unknown>,
+  normalizedFilters: Set<string>,
+) {
+  const text = pickString(record.text)
+  if (!text) return false
+
+  const normalizedText = normalizeCommunityFilter(text)
+  for (const filter of normalizedFilters) {
+    if (containsFilterToken(normalizedText, filter)) {
+      return true
+    }
+  }
+  return false
+}
+
+function extractTextLabels(text: string) {
+  if (!text) return []
+
+  const labels: string[] = []
+  const prefixMatch = text.match(/^\s*\[([^\]]+)\]/)
+  if (prefixMatch?.[1]) {
+    labels.push(prefixMatch[1])
+  }
+
+  for (const match of text.matchAll(/(?:^|\s)#([\p{L}\p{N}_-]+)/gu)) {
+    labels.push(match[1])
+  }
+
+  return labels
+}
+
+function containsFilterToken(text: string, filter: string) {
+  if (!filter) return false
+  const escaped = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(text)
 }
 
 function pickString(value: unknown) {

@@ -17431,161 +17431,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempAddReservedHandle: {
-    lexicon: 1,
-    id: 'com.atproto.temp.addReservedHandle',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Add a handle to the set of reserved handles.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle'],
-            properties: {
-              handle: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempCheckHandleAvailability: {
-    lexicon: 1,
-    id: 'com.atproto.temp.checkHandleAvailability',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
-        parameters: {
-          type: 'params',
-          required: ['handle'],
-          properties: {
-            handle: {
-              type: 'string',
-              format: 'handle',
-              description:
-                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
-            },
-            email: {
-              type: 'string',
-              description:
-                'User-provided email. Might be used to build handle suggestions.',
-            },
-            birthDate: {
-              type: 'string',
-              format: 'datetime',
-              description:
-                'User-provided birth date. Might be used to build handle suggestions.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'result'],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-                description: 'Echo of the input handle.',
-              },
-              result: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.temp.checkHandleAvailability#resultAvailable',
-                  'lex:com.atproto.temp.checkHandleAvailability#resultUnavailable',
-                ],
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidEmail',
-            description: 'An invalid email was provided.',
-          },
-        ],
-      },
-      resultAvailable: {
-        type: 'object',
-        description: 'Indicates the provided handle is available.',
-        properties: {},
-      },
-      resultUnavailable: {
-        type: 'object',
-        description:
-          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
-        required: ['suggestions'],
-        properties: {
-          suggestions: {
-            type: 'array',
-            description:
-              'List of suggested handles based on the provided inputs.',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.temp.checkHandleAvailability#suggestion',
-            },
-          },
-        },
-      },
-      suggestion: {
-        type: 'object',
-        required: ['handle', 'method'],
-        properties: {
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          method: {
-            type: 'string',
-            description:
-              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempCheckSignupQueue: {
-    lexicon: 1,
-    id: 'com.atproto.temp.checkSignupQueue',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Check accounts location in signup queue.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['activated'],
-            properties: {
-              activated: {
-                type: 'boolean',
-              },
-              placeInQueue: {
-                type: 'integer',
-              },
-              estimatedTimeMs: {
-                type: 'integer',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoTempDereferenceScope: {
     lexicon: 1,
     id: 'com.atproto.temp.dereferenceScope',
@@ -17593,14 +17438,13 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Allows finding the oauth permission scope from a reference',
+          'Dereference an OAuth scope reference into the full scope string.',
         parameters: {
           type: 'params',
           required: ['scope'],
           properties: {
             scope: {
               type: 'string',
-              description: "The scope reference (starts with 'ref:')",
             },
           },
         },
@@ -17612,7 +17456,6 @@ export const schemaDict = {
             properties: {
               scope: {
                 type: 'string',
-                description: 'The full oauth permission scope',
               },
             },
           },
@@ -17620,7 +17463,6 @@ export const schemaDict = {
         errors: [
           {
             name: 'InvalidScopeReference',
-            description: 'An invalid scope reference was provided.',
           },
         ],
       },
@@ -17632,19 +17474,19 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description:
-          'DEPRECATED: use queryLabels or subscribeLabels instead -- Fetch all labels from a labeler created after a certain date.',
+        description: 'Fetch labels created after an optional timestamp.',
         parameters: {
           type: 'params',
+          required: ['limit'],
           properties: {
-            since: {
-              type: 'integer',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
               maximum: 250,
-              default: 50,
+            },
+            since: {
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -17667,37 +17509,13 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempRequestPhoneVerification: {
-    lexicon: 1,
-    id: 'com.atproto.temp.requestPhoneVerification',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Request a verification code to be sent to the supplied phone number',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['phoneNumber'],
-            properties: {
-              phoneNumber: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoTempRevokeAccountCredentials: {
     lexicon: 1,
     id: 'com.atproto.temp.revokeAccountCredentials',
     defs: {
       main: {
         type: 'procedure',
-        description:
-          'Revoke sessions, password, and app passwords associated with account. May be resolved by a password reset.',
+        description: 'Revoke credentials for an account.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -17706,7 +17524,7 @@ export const schemaDict = {
             properties: {
               account: {
                 type: 'string',
-                format: 'at-identifier',
+                format: 'did',
               },
             },
           },
@@ -27166,14 +26984,8 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
-  ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
-  ComAtprotoTempCheckHandleAvailability:
-    'com.atproto.temp.checkHandleAvailability',
-  ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempDereferenceScope: 'com.atproto.temp.dereferenceScope',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
-  ComAtprotoTempRequestPhoneVerification:
-    'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
   ComParaActorDefs: 'com.para.actor.defs',

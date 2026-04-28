@@ -33,33 +33,32 @@ export default function (server: Server, ctx: AppContext) {
       const viewerDid = auth.credentials.did
       const streamRes = await pipethrough(ctx, req, { iss: viewerDid })
 
-      const localBoards = await ctx.actorStore.read(viewerDid, async (store) => {
-        const boards = await listLocalBoards(store, params.limit || 50)
-        return Promise.all(
-          boards.map(async (board) => {
-            const [membership, foundingMemberCount] = await Promise.all([
-              getLocalMembership({
-                store,
-                viewerDid,
-                boardUri: board.uri,
-              }),
-              getFoundingMemberCount({ store, board }),
-            ])
+      const localBoards = await ctx.actorStore.read(
+        viewerDid,
+        async (store) => {
+          const boards = await listLocalBoards(store, params.limit || 50)
+          return Promise.all(
+            boards.map(async (board) => {
+              const [membership, foundingMemberCount] = await Promise.all([
+                getLocalMembership({
+                  store,
+                  viewerDid,
+                  boardUri: board.uri,
+                }),
+                getFoundingMemberCount({ store, board }),
+              ])
 
-            return toListBoardView({
-              board,
-              creatorDid: viewerDid,
-              viewerMembershipState: membership?.membershipState ?? 'active',
-              viewerRoles: membership?.roles ?? ['owner', 'moderator'],
-              memberCount: foundingMemberCount,
-            })
-          }),
-        )
-      })
-
-      if (localBoards.length === 0) {
-        return streamRes
-      }
+              return toListBoardView({
+                board,
+                creatorDid: viewerDid,
+                viewerMembershipState: membership?.membershipState ?? 'active',
+                viewerRoles: membership?.roles ?? ['owner', 'moderator'],
+                memberCount: foundingMemberCount,
+              })
+            }),
+          )
+        },
+      )
 
       if (isJsonContentType(streamRes.headers['content-type']) === false) {
         return streamRes
@@ -68,11 +67,42 @@ export default function (server: Server, ctx: AppContext) {
       let bufferRes: Awaited<ReturnType<typeof asPipeThroughBuffer>> | undefined
       try {
         const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
-        const body = jsonToLex(JSON.parse(buffer.toString('utf8'))) as OutputSchema
-        const seen = new Set(body.boards.map((board) => board.uri))
+        const body = jsonToLex(
+          JSON.parse(buffer.toString('utf8')),
+        ) as OutputSchema
+        const appViewBoards = await ctx.actorStore.read(
+          viewerDid,
+          async (store) =>
+            Promise.all(
+              body.boards.map(async (board) => {
+                const membership = await getLocalMembership({
+                  store,
+                  viewerDid,
+                  boardUri: board.uri,
+                })
+                if (!membership) return board
+
+                const wasActive = board.viewerMembershipState === 'active'
+                const isActive = membership.membershipState === 'active'
+                const memberDelta =
+                  wasActive === isActive ? 0 : isActive ? 1 : -1
+
+                return {
+                  ...board,
+                  viewerMembershipState: membership.membershipState,
+                  viewerRoles: membership.roles,
+                  memberCount: Math.max(
+                    0,
+                    (board.memberCount ?? 0) + memberDelta,
+                  ),
+                }
+              }),
+            ),
+        )
+        const seen = new Set(appViewBoards.map((board) => board.uri))
         const mergedBoards = [
           ...localBoards.filter((board) => !seen.has(board.uri)),
-          ...body.boards,
+          ...appViewBoards,
         ]
 
         return formatMungedResponse<OutputSchema>({

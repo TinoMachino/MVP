@@ -239,12 +239,8 @@ import * as ComAtprotoSyncListReposByCollection from './types/com/atproto/sync/l
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate.js'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl.js'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos.js'
-import * as ComAtprotoTempAddReservedHandle from './types/com/atproto/temp/addReservedHandle.js'
-import * as ComAtprotoTempCheckHandleAvailability from './types/com/atproto/temp/checkHandleAvailability.js'
-import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue.js'
 import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/dereferenceScope.js'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
-import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 import * as ComParaActorGetProfileStats from './types/com/para/actor/getProfileStats.js'
 import * as ComParaCivicCastVote from './types/com/para/civic/castVote.js'
@@ -3508,42 +3504,6 @@ export class ComAtprotoTempNS {
     this._server = server
   }
 
-  addReservedHandle<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ComAtprotoTempAddReservedHandle.QueryParams,
-      ComAtprotoTempAddReservedHandle.HandlerInput,
-      ComAtprotoTempAddReservedHandle.HandlerOutput
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.addReservedHandle' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  checkHandleAvailability<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ComAtprotoTempCheckHandleAvailability.QueryParams,
-      ComAtprotoTempCheckHandleAvailability.HandlerInput,
-      ComAtprotoTempCheckHandleAvailability.HandlerOutput
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.checkHandleAvailability' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  checkSignupQueue<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ComAtprotoTempCheckSignupQueue.QueryParams,
-      ComAtprotoTempCheckSignupQueue.HandlerInput,
-      ComAtprotoTempCheckSignupQueue.HandlerOutput
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.checkSignupQueue' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   dereferenceScope<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3565,18 +3525,6 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.fetchLabels' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  requestPhoneVerification<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ComAtprotoTempRequestPhoneVerification.QueryParams,
-      ComAtprotoTempRequestPhoneVerification.HandlerInput,
-      ComAtprotoTempRequestPhoneVerification.HandlerOutput
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

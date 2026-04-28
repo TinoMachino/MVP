@@ -43,11 +43,13 @@ export default function (server: Server, ctx: AppContext) {
         })
         if (!board) return null
 
-        const [membership, governance, foundingMemberCount] = await Promise.all([
-          getLocalMembership({ store, viewerDid, boardUri: board.uri }),
-          getLocalGovernance({ store, creatorDid: viewerDid, board }),
-          getFoundingMemberCount({ store, board }),
-        ])
+        const [membership, governance, foundingMemberCount] = await Promise.all(
+          [
+            getLocalMembership({ store, viewerDid, boardUri: board.uri }),
+            getLocalGovernance({ store, creatorDid: viewerDid, board }),
+            getFoundingMemberCount({ store, board }),
+          ],
+        )
 
         return {
           board: toGetBoardView({
@@ -85,8 +87,42 @@ export default function (server: Server, ctx: AppContext) {
       let bufferRes: Awaited<ReturnType<typeof asPipeThroughBuffer>> | undefined
       try {
         const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
-        const body = jsonToLex(JSON.parse(buffer.toString('utf8'))) as OutputSchema
-        return formatMungedResponse(body)
+        const body = jsonToLex(
+          JSON.parse(buffer.toString('utf8')),
+        ) as OutputSchema
+        const mungedBody = await ctx.actorStore.read(
+          viewerDid,
+          async (store) => {
+            if (!body.board?.uri) return body
+
+            const membership = await getLocalMembership({
+              store,
+              viewerDid,
+              boardUri: body.board.uri,
+            })
+            if (!membership) return body
+
+            const wasActive = body.board.viewerMembershipState === 'active'
+            const isActive = membership.membershipState === 'active'
+            const memberDelta = wasActive === isActive ? 0 : isActive ? 1 : -1
+
+            return {
+              ...body,
+              board: {
+                ...body.board,
+                viewerMembershipState: membership.membershipState,
+                viewerRoles: membership.roles,
+                memberCount: Math.max(
+                  0,
+                  (body.board.memberCount ?? 0) + memberDelta,
+                ),
+              },
+              viewerCapabilities: getViewerCapabilities(membership),
+            }
+          },
+        )
+
+        return formatMungedResponse(mungedBody)
       } catch {
         return bufferRes ?? streamRes
       }

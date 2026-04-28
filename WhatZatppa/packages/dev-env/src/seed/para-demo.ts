@@ -1,5 +1,10 @@
 import {SeedClient} from './client'
 
+const postMetaType = (type: string): 'policy' | 'matter' | 'meme' => {
+  if (type === 'policy' || type === 'meme') return type
+  return 'matter'
+}
+
 export default async (sc: SeedClient) => {
   const createdAt = () => new Date().toISOString()
   const login = async (identifier: string, password: string) => {
@@ -155,13 +160,17 @@ export default async (sc: SeedClient) => {
         ],
         deputies: [
           {
+            key: `${pb.slug}-digital-deputy`,
             tier: 'community',
             role: 'Diputado Digital',
+            description: `Representante digital de ${p.name} para cabildeos comunitarios.`,
+            capabilities: ['represent_community', 'vote_on_cabildeos'],
             activeHolder: {
               did: p.deputy.assertDid,
               handle: (p.deputy as any).session?.handle || '',
               displayName: users.find(u => u.did === p.deputy.assertDid)?.name || '',
             },
+            activeSince: createdAt(),
             votes: 1,
             applicants: [],
           },
@@ -717,7 +726,7 @@ export default async (sc: SeedClient) => {
       record: {
         $type: 'com.para.social.postMeta',
         post: p.uri,
-        postType: p.postType,
+        postType: postMetaType(p.postType),
         party: `p/${p.party}`,
         community: partyBoard ? partyBoard.slug : undefined,
         official: i % 2 === 0,
