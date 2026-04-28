@@ -1,4 +1,4 @@
-# MPV — Full Stack Project
+# MVP 
 
 ## Estructura
 
@@ -17,7 +17,7 @@ Requiere **Node.js 22** y **pnpm**:
 
 ```bash
 cd WhatZatppa
-pnpm install
+make deps
 make build          # genera dist/
 make run-dev-env    # levanta PDS + AppView + Ozone local
 ```
@@ -42,7 +42,6 @@ make run-dev-env    # levanta PDS + AppView + Ozone local
 
 ```bash
 cd PARA
-pnpm install
 yarn install
 yarn start
 ```
